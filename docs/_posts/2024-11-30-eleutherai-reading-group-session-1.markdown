@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  "EleutherAI ML Scalability & Performance Reading Group Session 1: Intro to GPU architecture, CUDA, and NCCL"
+title:  "An intro to GPU architecture, CUDA, NCCL, and common ML performance bottlenecks"
 date:   2024-11-30 12:45:51 -0700
 categories: ml performance
 ---

@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  "EleutherAI ML Scalability & Performance Reading Group Session 4: Ring Attention"
+title:  "Ring Attention with Blockwise Transformers for Near-Infinite Context"
 date:   2025-01-12 12:45:51 -0700
 categories: ml performance
 ---

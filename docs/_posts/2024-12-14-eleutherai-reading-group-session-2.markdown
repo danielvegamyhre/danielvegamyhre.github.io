@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  "EleutherAI ML Scalability & Performance Reading Group Session 2: Flash Attention"
+title:  "FlashAttention: Fast and Memory-Efficient Exact Attention with IO-Awareness"
 date:   2024-12-14 12:45:51 -0700
 categories: ml performance
 ---
