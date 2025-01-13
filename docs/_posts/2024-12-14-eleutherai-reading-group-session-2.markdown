@@ -18,4 +18,6 @@ Papers:
 
 2. [FlashAttention-2: Faster Attention with Better Parallelism and Work Partitioning](https://arxiv.org/abs/2307.08691)
 
+Recording:
+
 [![ML Scalability & Performance Reading Group Session 2: Flash Attention](https://img.youtube.com/vi/Lys0TpsLIEc/maxresdefault.jpg)](https://www.youtube.com/watch?v=Lys0TpsLIEc)
