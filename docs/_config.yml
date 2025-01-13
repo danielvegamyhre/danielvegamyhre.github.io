@@ -21,11 +21,8 @@
 title: Worklog and notes
 baseurl: "" # the subpath of your site, e.g. /blog
 url: "" # the base hostname & protocol for your site, e.g. http://example.com
-# twitter_username: jekyllrb
 github_username:  danielvegamyhre
-
-social_links:
-  linkedin: "https://www.linkedin.com/in/daniel-vega-myhre-a799aba2/"
+linkedin_username: daniel-vega-myhre-a799aba2
 
 # Build settings
 theme: minima

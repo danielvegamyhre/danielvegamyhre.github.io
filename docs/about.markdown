@@ -4,15 +4,6 @@ title: About
 permalink: /about/
 ---
 
-This is the base Jekyll theme. You can find out more info about customizing your Jekyll theme, as well as basic Jekyll usage documentation at [jekyllrb.com](https://jekyllrb.com/)
+I'm currently a ML engineer at Meta and a part-time MS CS student a Georgia Tech. I also organize the EleutherAI ML scalability & performance research paper reading group, which you can find in the official EleutherAI Discord [here](https://www.eleuther.ai/community) if you're interested in joining (I also upload the recording to[YouTube](https://www.youtube.com/@Eleuther_AI/playlists)). I've done various personal projects related to ML and distributed systems, which you can find on my [Github](https://github.com/danielvegamyhre).
 
-You can find the source code for Minima at GitHub:
-[jekyll][jekyll-organization] /
-[minima](https://github.com/jekyll/minima)
-
-You can find the source code for Jekyll at GitHub:
-[jekyll][jekyll-organization] /
-[jekyll](https://github.com/jekyll/jekyll)
-
-
-[jekyll-organization]: https://github.com/jekyll
+The purpose of this site is for me to document what I'm learning or working on; up until recently I've mostly been learning independently while squirreled away at home, so I thought it would be fun to start sharing.
