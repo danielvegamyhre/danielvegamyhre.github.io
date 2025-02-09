@@ -11,10 +11,10 @@ My annotated versions of these papers can be found be found on my Github [here](
 
 
 Papers:
-1. GPipe: Easy Scaling with Micro-Batch Pipeline Parallelism (https://arxiv.org/abs/1811.06965)
-2. PipeDream: Fast and Efficient Pipeline Parallel DNN Training (https://arxiv.org/abs/1806.03377)
-3. Zero Bubble Pipeline Parallelism (https://arxiv.org/abs/2401.10241)
+1. [GPipe: Easy Scaling with Micro-Batch Pipeline Parallelism](https://arxiv.org/abs/1811.06965)
+2. [PipeDream: Fast and Efficient Pipeline Parallel DNN Training](https://arxiv.org/abs/1806.03377)
+3. [Zero Bubble Pipeline Parallelism](https://arxiv.org/abs/2401.10241)
 
 Recording:
 
-[![ML Scalability & Performance Reading Group Session 6: Zero Bubble Pipeline Parallelism](https://youtu.be/4wTuGkiob7o?si=xX6gHpgnvSKmJgCE/maxresdefault.jpg)](https://youtu.be/4wTuGkiob7o?si=xX6gHpgnvSKmJgCE)
+[![ML Scalability & Performance Reading Group Session 6: Zero Bubble Pipeline Parallelism](https://img.youtube.com/vi/4wTuGkiob7o/maxresdefault.jpg)](https://youtu.be/4wTuGkiob7o)
