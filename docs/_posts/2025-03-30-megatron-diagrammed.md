@@ -22,15 +22,71 @@ The paper presents sharding strategies for 4 types of layers: the MLP block, the
 
 ## Sharding the MLP blocks
 
-At the time this paper was written, the standard MLP block following the attention layers in transformers consisted of 2 linear layers with a non-linearity between them [^1].
-
-Fundamentally, these linear layers will each require a GEMM operation. 
-
-For the first GEMM, we are performing a matmul between the input activations `X`, and the first linear weights `A`, and applying the GeLU non-linearity to the result:
+At the time this paper was written, the standard MLP block following the attention layers in transformers consisted of 2 linear layers with a non-linearity between them [^1]. This can be represented mathematically like so:
 
 $$
     Y = GeLU(XA) 
 $$
+
+$$
+    O = YB
+$$
+
+where `X` are our input activations, `A` is the first linear projection, and `B` is the second linear projection.
+
+Fundamentally, these linear layers will each require 3 GEMM operations: one in the forward pass, and two in the backward pass:
+
+$$
+    O = XW
+$$
+
+$$ 
+\frac{\partial L}{\partial X} = \frac{\partial L}{\partial O}W
+$$
+
+$$
+\frac{\partial L}{\partial W} = \left[\frac{\partial L}{\partial O} \right]^T X
+$$
+
+The output size of these GEMM operations will be based on the dimensions of the input `X` and the weights `W`:
+
+$$
+    X \in \mathbb{R}^{M \times K}, \quad W \in \mathbb{R}^{K \times N} \quad \Rightarrow \quad XW \in \mathbb{R}^{M \times N}
+$$
+
+ In the linear projections of the MLP blocks in the GPT-2 style transformer models studied in this paper, `M`, `K`, and `N` are *very large* (by modern standards they're actually small, but let's read the paper in the context it was written in). 
+ 
+ Thus, storing all of the intermediate output activations of these GEMMs will be extremely memory intensive. Unless we find a way to reduce this excessive activation memory, we'll be unable to do research on larger models, due to the current physical limits of HBM capacity on GPUs/TPUs (in this paper, the authors used NVIDIA V100s with 32GB of HBM).
+
+Thus is born the motivation for the authors to explore reducing activation memory by *sharding* the matrices involved in these GEMMS across multiple devices. By sharding the computation across devices, each device holds smaller sub-matrices and thus produces smaller  activations. 
+
+<!-- Fundamentally, these linear layers will each require a GEMM operation. These GEMM operations are computationally expensive - in asymptotic notation, the time complexity of a 2D GEMM operation between matrices of shape `(M,K)` and `(K,N)` is $$O(M \cdot K \cdot N)$$. Put another way, the computation required to compute the GEMM grows *non-linearly* with respect to the matrix dimensions. If we increase `M` by 1, the number of FMA (fused multiply add operations used in dot prdocuts) we need to perform grows by `K * N`. 
+
+Given the MLP blocks in large transformer models are often have very large dimensions, $$ M \cdot K \cdot N $$ can be very large. Furthermore, we usually have a batch dimension on our inputs, meaning our matmul shapes will be:
+
+`Y = (batch size, sequence length, hidden dim) @ (hidden_dim, 4 * hidden_dim) = (batch size, sequence length, 4 * hidden_dim)`.
+
+In this paper, they used GPT-2 for experiments with:
+
+- Batch size: 512
+- Sequence length: 1024
+- Hidden size: 3072
+
+This model is small by modern standards, so you can multiply these out yourself and see this will require *a lot* of compute - and this is just for the forward pass!
+
+The backward pass for a linear layer requires 2 more GEMMs:
+
+$$ 
+\frac{\partial L}{\partial X} = GW
+$$
+
+$$
+\frac{\partial L}{\partial W} = G^T X
+$$
+
+where `G` is our upstream gradient, `X` is our input activations and `W` is our weights.
+
+Suffice to say, a lot of compute is required for this! -->
 
 ### 1st GEMM - the bad option
 
@@ -41,7 +97,7 @@ $$
     \begin{bmatrix} 
     A_1 \\ 
     A_2 
-    \end{bmatrix}.
+    \end{bmatrix}
 $$
 
 Conceptually, the math above can be visualized like so:
@@ -50,7 +106,7 @@ Conceptually, the math above can be visualized like so:
 
 As shown in the diagram above, this option is not ideal because to compute the *complete* results of any output element in the output matrix, we would need to sum the *partial* results on each accelerator. This means we already would need an all-reduce operation across all N devices in the tensor parallel group - after only doing the 1st GEMM in the MLP layer! Since we're trying to minimize the communication overhead by keeping these computations independent on each device for as long as possible, this is probably not ideal, so we should evaluate other options.
 
-However, you might ask: why is having partial results after the 1st GEMM necessary problematic? Why can't we keep the partial results on each device, continue on with applying GeLU to each set of activations individually, do the GEMM for the next linear layer, and then combine these partial outputs via all-reduce at the end?
+However, you might ask: do we necessarily *have* to all-reduce here? Why can't we keep the partial results on each device, continue on with applying GeLU to each set of activations individually, do the GEMM for the next linear layer, and then combine these partial outputs via all-reduce at the end?
 
 The answer is because we need this *partioned* version of the activation function (left above) to be mathematically equivalent to the original, *non-sharded* version of the activation function. Otherwise, the integrity of the numerics will be comprised and we'll run into things like convergence problems, training instability, and so on. In other words: the math will be wrong.
 
@@ -63,21 +119,8 @@ $$
 Here is an example demonstrating this with a simpler non-linearity (ReLU), and scalar values instead of matrices:
 
 $$
-\begin{equation}
-\text{ReLU}
-\left(
-    \left(
-        -1 \cdot 2 
-    \right)
-     + 
-     \left(
-        1 \cdot 1 
-    \right)
-\right) 
-= \text{ReLU}(-2 + 1) 
-= \text{ReLU}(-1) 
-= 0
-\end{equation}
+\text{ReLU}\left( (-1 \cdot 2) + (1 \cdot 1) \right) = \text{ReLU}(-2 + 1) = \text{ReLU}(-1) = 0
+
 $$
 
 vs
@@ -132,7 +175,7 @@ In this case, the all-reduce operation in the forward-pass will become a identit
 
 Conversely, since our input activations to the MLP block were not partitioned in the forward pass (i.e., identity operator), this will become an all-reduce in the backward pass when we need to propagate the gradients from each shard of the computation through to the previous layer. This way our reduced (summed) gradients are exactly equivalent to the gradients of a non-partitioned version of this MLP block.
 
-**Interesting side note**: In the Megatron paper, the dropout computation is duplicated on each device (i.e., not sharded), with the reasoning being these layers are cheap computation-wise. However, this sets the stage for a future paper, [Reducing Activation Recomputation in Large Transformer Models](https://arxiv.org/abs/2205.05198), which observed that layers in the non-TP regions of the transformer (namely dropout and layer normalization) do not require much computation but *do* require a lot of activation memory, making them a potentially juicy target for optimization. They also observed the computation for these layers can be performed *independently along the sequence dimension* without violating the mathematics - meaning theoretically, they can shard along the sequence dimension and potentially reduce activation memory even further. If you're interested in this, I presented this paper at the Eleuther AI ML Scalability & Performance reading group, which you can check out the recording for [here](https://danielvegamyhre.github.io/ml/performance/2025/03/23/eleutherai-reading-group-session-9.html).
+**Interesting side note**: In the Megatron paper, the dropout computation is duplicated on each device (i.e., not sharded). The authors don't say much about why this is, I assume it's because these layers are cheap computationally and it was not clear (at the time) that attempting to shard these layers would have a favorable "memory reduction vs communication overhead" trade-off. However, this sets the stage for a future paper, [Reducing Activation Recomputation in Large Transformer Models](https://arxiv.org/abs/2205.05198), which observed that layers in the non-TP regions of the transformer (namely dropout and layer normalization) do not require much computation but *do* require a lot of activation memory, making them a potentially juicy target for optimization. They also observed the computation for these layers can be performed *independently along the sequence dimension* without violating the mathematics - meaning theoretically, they can shard along the sequence dimension and potentially reduce activation memory per device, thus avoiding the need to recompute activations in the backward pass to train larger models. If you're interested in this, I presented this paper at the Eleuther AI ML Scalability & Performance reading group, which you can check out the recording for [here](https://danielvegamyhre.github.io/ml/performance/2025/03/23/eleutherai-reading-group-session-9.html).
 
 Anyway, now that we understand how the MLP block is sharded and *why*, we're ready to move onto the mult-head attention layer.
 
