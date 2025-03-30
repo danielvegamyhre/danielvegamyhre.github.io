@@ -28,6 +28,7 @@ linkedin_username: daniel-vega-myhre-a799aba2
 theme: minima
 plugins:
   - jekyll-feed
+  - jemoji
 
 
 # Exclude from processing.
