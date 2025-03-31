@@ -406,7 +406,7 @@ $$
 Note that our "true probability" (label) will be 1 for true token, and 0 for all others. Therefore, the CE loss simplifies to:
 
 $$
-\text{CE} = -\sum_{i}^{n} 1 \cdot log(q(x_i))
+\text{CE} = -\sum_{i=1}^{n} 1 \cdot log(q(x_i))
 $$
 
 Where:
@@ -416,7 +416,7 @@ Where:
 Now remember the formula for the softmax operation, which we'll need to compute $$q(x_i)$$:
 
 $$
-\text{softmax} = \frac{e^{q(x_i)}}{\sum_{j}^{n}(e^q(x_j))}
+\text{softmax} = \frac{e^{q(x_i)}}{\sum_{j=1}^{n}e^{q(x_j)}}
 $$
 
 Where:
