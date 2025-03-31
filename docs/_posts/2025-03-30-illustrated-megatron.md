@@ -14,25 +14,38 @@ In this post, I attempt to provide a detailed walkthrough of Megatron-style tens
 
 The goal of this post is to provide both an **overview** of the techniques proposed in the paper, as well as a **derivation** of how we arrive at each particular technique as the best solution, from a set of possible options. We'll also some examine some of the implementation details of tensor parallelism in PyTorch to make our knowledge more concrete.
 
-This post will be divided into 4 sections, with some broken down into more digestible sub-sections:
-1. [MLP blocks](#mlp-blocks)
+This post will be divided into 6 sections, with some broken down into more digestible sub-sections:
+1. [TL;DR](#tldr)
+2. [MLP blocks](#mlp-blocks)
     - [1st GEMM of the MLP block forward pass - the bad option](#1st-gemm-of-the-mlp-forward-pass-the-bad-option-)
     - [1st GEMM of the MLP block forward pass - the good option](#1st-gemm-of-the-mlp-forward-pass-the-good-option-)
     - [2nd GEMM of the MLP block](#2nd-gemm-of-the-mlp-forward-pass)
-2. [Attention layers](#attention-layers)
+3. [Attention layers](#attention-layers)
     - [Optional attention review](#optional-attention-review)
     - [Sharding Q,K,V, and O](#sharding-qkv-and-o)
-3. [Input embeddings](#input-embeddings)
-4. [Output embeddings](#output-embeddings)
-5. [Fusing in the cross-entropy loss](#fusing-in-the-cross-entropy-loss)
+4. [Input embeddings](#input-embeddings)
+5. [Output embeddings](#output-embeddings)
+6. [Fusing in the cross-entropy loss](#fusing-in-the-cross-entropy-loss)
 
 ## TL;DR 
 
-The paper [Megatron-LM: Training Multi-Billion Parameter Language Models Using Model Parallelism](https://arxiv.org/abs/1909.08053) is a seminal work in ML performance research, and is a must-read for anyone working in this domain. It introduces tensor parallelism as a new technique which partitions the computation of certain transformer layers across accelerators such that: 
+The paper [Megatron-LM: Training Multi-Billion Parameter Language Models Using Model Parallelism](https://arxiv.org/abs/1909.08053) is a seminal work in ML performance research, and is a must-read for anyone working in this domain. It introduces tensor parallelism as a new technique which 
 
-1) The activations are smaller, reducing peak memory usage and allowing larger models to be trained. Activations often dominate peak memory usage in very large models, so reducing activation memory required to train larger models is important.
+Specifically, TP is applied to:
+1. Input embedding
+2. MLP blocks
+3. Multi-headed self-attention layers
+4. Output embedding with fused cross-entropy loss
 
-2) The activations remain sharded for as long as possible before synchronizing (which must be done to ensure the mathematical integrity of the training process), to minimize this communication overhead between devices, which can slow down training and become a bottleneck.
+The computations are carefully partitioned such that:
+
+- The intermediate activations are smaller, reducing peak memory usage and allowing larger models to be trained. Activations often dominate peak memory usage in very large models, so reducing activation memory required to train larger models is important.
+
+- The activations remain sharded for as long as possible before synchronizing (which must be done to ensure the mathematical integrity of the training process), to minimize this communication overhead between devices, which can slow down training and become a bottleneck.
+
+A very high level overview of Megatron-style TP is shown in the diagram below, which is from the paper:
+
+<img src="/images/megatron-diagrams/megatron-paper-diagram.png" alt="megatron-diagram" style="width: 100%">
 
 For readers interested in a deep-dive - let's get started with parallelizing the MLP blocks.
 
@@ -169,14 +182,21 @@ In this case, the all-reduce operation in the forward-pass will become a identit
 
 Conversely, since our input activations to the MLP block were not partitioned in the forward pass (i.e., identity operator), this will become an all-reduce in the backward pass when we need to propagate the gradients from each shard of the computation through to the previous layer. This way our reduced (summed) gradients are exactly equivalent to the gradients of a non-partitioned version of this MLP block.
 
-Now, you may notice that the dropout layer (and layer norm, which is not pictured) are performing redundant computation on every device: after the all-reduce, all devices have the same output activations, and thus applying dropout and layer norm to them will be identical. These particular layers were not the subject of this paper, but resolving this inefficiency was later explored in a subsequent paper by NVIDIA [^2].
-
 To recap:
 - In the MLP block forward pass, we do only one all-reduce at the end, before the dropout layer. This becomes an identity op in the backward pass.
 - In the forward pass, the input activations are not sharded, so this becomes an all-reduce in the backward pass.
 - In total, for each MLP block in the transformer, there will be a total of 2 all-reduces: one in the forward pass, and one in the backward pass.
 
-Now that we understand how the MLP block is sharded and *why*, we're ready to move onto the multi-headed attention layer.
+Now that we understand how the MLP block is sharded and *why*, let's move on and discuss how dropout and layer norm are handled.
+
+## Dropout and layer norm
+
+Now, you may notice that the dropout layer (and layer norm, which is not pictured) are performing redundant computation on every device: after the all-reduce, all devices have the same output activations, and thus applying dropout and layer norm to them will be identical. The authors found simply duplicating this computation is okay because they are relatively computationally cheap, and they did not want to introduce more communication overhead to the model by sharding them. 
+
+However, this sets the stage for a future paper, [Reducing Activation Recomputation in Large Transformer Models](https://arxiv.org/abs/2205.05198), which observed that layers in the non-tensor parallel regions of the transformer (namely dropout and layer normalization) do not require much computation but *do* require a lot of activation memory, making them a potentially juicy target for optimization. 
+
+They also observed the computation for these layers can be performed *independently along the sequence dimension* without violating the mathematics - meaning theoretically, they can shard along the sequence dimension and potentially reduce activation memory per device, thus avoiding the need to recompute activations in the backward pass to train larger models. If you're interested in this, I presented this paper at the Eleuther AI ML Scalability & Performance reading group, which you can check out the recording for [here](https://danielvegamyhre.github.io/ml/performance/2025/03/23/eleutherai-reading-group-session-9.html).
+
 
 ## Attention layers
 
@@ -451,7 +471,6 @@ That does it for this post. If you enjoyed it, feel free to join the ML Scalabil
 # Footnotes
 [^1]: Nowadays, FFNs with a slightly different structure are often used (see [Llama3](https://arxiv.org/abs/2407.21783) models as an example).
 
-[^2]: In the Megatron paper, the dropout computation is duplicated on each device (i.e., not sharded). The authors don't say much about why this is, I assume it's because these layers are cheap computationally and it was not clear (at the time) that attempting to shard these layers would have a favorable "memory reduction vs communication overhead" trade-off. However, this sets the stage for a future paper, [Reducing Activation Recomputation in Large Transformer Models](https://arxiv.org/abs/2205.05198), which observed that layers in the non-TP regions of the transformer (namely dropout and layer normalization) do not require much computation but *do* require a lot of activation memory, making them a potentially juicy target for optimization. They also observed the computation for these layers can be performed *independently along the sequence dimension* without violating the mathematics - meaning theoretically, they can shard along the sequence dimension and potentially reduce activation memory per device, thus avoiding the need to recompute activations in the backward pass to train larger models. If you're interested in this, I presented this paper at the Eleuther AI ML Scalability & Performance reading group, which you can check out the recording for [here](https://danielvegamyhre.github.io/ml/performance/2025/03/23/eleutherai-reading-group-session-9.html).
 
 [^3]: In more modern transformer models, the hidden dimension can be as high as [16,384](https://github.com/pytorch/torchtitan/blob/ecf26c82e328916eade6720aafe2e4c7e7622e7b/torchtitan/models/llama/__init__.py#L52) which would require ~1.67GB to store in bfloat16 with the same vocabulary size of 51,200.
 
