@@ -14,18 +14,19 @@ In this post, I attempt to provide a detailed walkthrough of Megatron-style tens
 
 The goal of this post is to provide both an **overview** of the techniques proposed in the paper, as well as a **derivation** of how we arrive at each particular technique as the best solution, from a set of possible options. We'll also some examine some of the implementation details of tensor parallelism in PyTorch to make our knowledge more concrete.
 
-This post will be divided into 6 sections, with some broken down into more digestible sub-sections:
+This post will be divided into 7 sections, with some broken down into more digestible sub-sections:
 1. [TL;DR](#tldr)
 2. [MLP blocks](#mlp-blocks)
     - [1st GEMM of the MLP block forward pass - the bad option](#1st-gemm-of-the-mlp-forward-pass-the-bad-option-)
     - [1st GEMM of the MLP block forward pass - the good option](#1st-gemm-of-the-mlp-forward-pass-the-good-option-)
     - [2nd GEMM of the MLP block](#2nd-gemm-of-the-mlp-forward-pass)
-3. [Attention layers](#attention-layers)
+3. [Dropout and layer norm](#dropout-and-layer-norm)
+4. [Attention layers](#attention-layers)
     - [Optional attention review](#optional-attention-review)
     - [Sharding Q,K,V, and O](#sharding-qkv-and-o)
-4. [Input embeddings](#input-embeddings)
-5. [Output embeddings](#output-embeddings)
-6. [Fusing in the cross-entropy loss](#fusing-in-the-cross-entropy-loss)
+5. [Input embeddings](#input-embeddings)
+6. [Output embeddings](#output-embeddings)
+7. [Fusing in the cross-entropy loss](#fusing-in-the-cross-entropy-loss)
 
 ## TL;DR 
 
@@ -385,7 +386,7 @@ the cross entropy loss which reduces the dimension to $$ b \times s$$. Communica
 So my understanding of how this works is based on a combination of thinking deeply, diagramming, and reading through the [Megatron-LM](https://github.com/NVIDIA/Megatron-LM) code base (which has evolved a lot since the original 2021 paper was published). I'll share what I've gathered on how this works below.
 
 
-Now before we dive in, let's review the cross-entropy loss formula:
+Before we dive in, let's review the cross-entropy loss formula:
 
 $$ 
 \text{CE} = -\sum_{i}^{n} p(x_i) log(q(x_i))
