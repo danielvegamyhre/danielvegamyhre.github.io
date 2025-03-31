@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  "A diagrammed walkthrough of Megatron-style tensor parallelism"
+title:  "An illustrated walkthrough of Megatron-style tensor parallelism"
 date:   2025-03-30 12:45:51 -0700
 categories: ml performance
 ---
