@@ -14,7 +14,7 @@ In this post, I attempt to provide a detailed walkthrough of Megatron-style tens
 
 The goal of this post is to provide both an **overview** of the techniques proposed in the paper, as well as a **derivation** of how we arrive at each particular technique as the best solution, from a set of possible options. We'll also some examine some of the implementation details of tensor parallelism in PyTorch to make our knowledge more concrete.
 
-This post will be divided into 4 sections, with some broken down into more digestable sub-sections:
+This post will be divided into 4 sections, with some broken down into more digestible sub-sections:
 1. [MLP blocks](#mlp-blocks)
     - [1st GEMM of the MLP block forward pass - the bad option](#1st-gemm-of-the-mlp-forward-pass-the-bad-option-)
     - [1st GEMM of the MLP block forward pass - the good option](#1st-gemm-of-the-mlp-forward-pass-the-good-option-)
@@ -28,7 +28,7 @@ This post will be divided into 4 sections, with some broken down into more diges
 
 ## TL;DR 
 
-The paper [Megatron-LM: Training Multi-Billion Parameter Language Models Using Model Parallelism](https://arxiv.org/abs/1909.08053) is a seminal work in ML performance research, and is a must-read for anyone working in this domain. It introduces tensor parallelism as a new technique which paritions the computation of certain transformer layers across accelerators such that: 
+The paper [Megatron-LM: Training Multi-Billion Parameter Language Models Using Model Parallelism](https://arxiv.org/abs/1909.08053) is a seminal work in ML performance research, and is a must-read for anyone working in this domain. It introduces tensor parallelism as a new technique which partitions the computation of certain transformer layers across accelerators such that: 
 
 1) The activations are smaller, reducing peak memory usage and allowing larger models to be trained. Activations often dominate peak memory usage in very large models, so reducing activation memory required to train larger models is important.
 
@@ -80,7 +80,7 @@ $$
 
 Thus is born the motivation for the authors to explore reducing activation memory by *sharding* the matrices involved in these GEMMS across multiple devices. By sharding the computation across devices, each device holds smaller sub-matrices and thus produces smaller  activations. 
 
-**Note**: the authors focused on the forward pass when describing the paritioning scheme of the MLP block, so we'll do the same here, but the same concepts outlined below apply to the backward pass as well.
+**Note**: the authors focused on the forward pass when describing the partitioning scheme of the MLP block, so we'll do the same here, but the same concepts outlined below apply to the backward pass as well.
 
 #### **1st GEMM of the MLP forward pass**: *the bad option* ❌
 
@@ -94,7 +94,7 @@ $$
     \end{bmatrix}
 $$
 
-Conceptually, the math above can be visualized like so (**same-colored arrows** represent dot products occuring locally on a device):
+Conceptually, the math above can be visualized like so (**same-colored arrows** represent dot products occurring locally on a device):
 
 <img src="/images/megatron-diagrams/MLP-1st-GEMM-bad-option-stacked-layout.png" alt="MLP-1st-GEMM-bad-option" style="width: 100%">
 
@@ -102,7 +102,7 @@ As shown in the diagram above, this option is not ideal because to compute the *
 
 However, you might ask: do we necessarily *have* to all-reduce here? Why can't we keep the partial results on each device, continue on with applying GeLU to each set of activations individually, do the GEMM for the next linear layer, and then combine these partial outputs via all-reduce at the end?
 
-The answer is because we need this *partioned* version of the activation function (left above) to be mathematically equivalent to the original, *non-sharded* version of the activation function. Otherwise, the integrity of the numerics will be comprised and we'll run into things like convergence problems, training instability, and so on. In other words: the math will be wrong.
+The answer is because we need this *partitioned* version of the activation function (left above) to be mathematically equivalent to the original, *non-sharded* version of the activation function. Otherwise, the integrity of the numerics will be comprised and we'll run into things like convergence problems, training instability, and so on. In other words: the math will be wrong.
 
 To specific, we can't perform the GeLU non-linearity on the partial results and sum later because non-linearities like GeLU do not have the distributive property:
 
@@ -140,7 +140,7 @@ With this approach, there are some immediately obvious benefits:
 
 2) Since we have *complete* results for each element of the output matrix on a given device, no summation/reduction operations are necessary and we can apply GeLU directly to these outputs, while maintaining mathematical fidelity with the non-sharded computation - super nice! :fire:
 
-With this approach, the activations from the first linear layer now stay paritioned column-wise through the GeLU and pass into the 2nd GEMM.
+With this approach, the activations from the first linear layer now stay partitioned column-wise through the GeLU and pass into the 2nd GEMM.
 
 #### **2nd GEMM of the MLP forward pass**
 
@@ -148,7 +148,7 @@ For this final step in the MLP block, there's no way to avoid synchronization an
 
 - Given the activations $$Y$$ are sharded column-wise and the activations must be the left operand in the next GEMM $$O = YB$$, we can only shard the weights row-wise, so that the number of columns in the left operand (activations) match the number of rows in the right operand (weights) on each device, so we can complete a standard dot product operation. However, the resulting output matrices $$ [O_1, O_2] = [Y_1 B_1, Y_2 B_2] $$ will contain *partial* results that must be summed across devices before going through the next layer - dropout.
 
-- Matrix multiplication does not have the communiative property ($$AB \ne BA$$). Therefore, we can't swap around the order of our GEMM operands to make the current column-wise sharding of the activations more favorable, as the mathematics would diverge from the original, non-sharded computation.
+- Matrix multiplication does not have the commutative property ($$AB \ne BA$$). Therefore, we can't swap around the order of our GEMM operands to make the current column-wise sharding of the activations more favorable, as the mathematics would diverge from the original, non-sharded computation.
 
 Between the two options of sharding the weight matrix $$B$$ row-wise or column-wise 
 
@@ -163,7 +163,7 @@ Now we have a shard of the complete outputs of the MLP block on each device. We 
 
 <img src="/images/megatron-diagrams/2nd-GEMM-stacked-layout.png" alt="MLP-1st-GEMM-bad-option" style="width: 100%">
 
-It's important to remember when we do a collective in the forward pass, we'll need to peform the *inverse* of the collective in the backward pass, to propagate the gradient to all relevant inputs, or reduce the gradient from all relevant outputs.
+It's important to remember when we do a collective in the forward pass, we'll need to perform the *inverse* of the collective in the backward pass, to propagate the gradient to all relevant inputs, or reduce the gradient from all relevant outputs.
 
 In this case, the all-reduce operation in the forward-pass will become a identity operation (i.e., a no-op) of the upstream gradient across devices.
 
@@ -176,7 +176,7 @@ To recap:
 - In the forward pass, the input activations are not sharded, so this becomes an all-reduce in the backward pass.
 - In total, for each MLP block in the transformer, there will be a total of 2 all-reduces: one in the forward pass, and one in the backward pass.
 
-Now that we understand how the MLP block is sharded and *why*, we're ready to move onto the mult-head attention layer.
+Now that we understand how the MLP block is sharded and *why*, we're ready to move onto the multi-headed attention layer.
 
 ## Attention layers
 
@@ -233,7 +233,7 @@ And now all of our tokens position in embedding space has been updated by aggreg
 
 #### Sharding Q,K,V, and O
 
-Thus we can shard the $$W^Q$$ $$W^K$$  $$W^V$$ parameter matrices column-wise across the `num_heads` dimension, as shown in the diagram below. These will operate on our non-sharded input activations which will be coming a previous layer norm layer, which as mentioned previously, is NOT partioned in any way, so each device has duplicate activations from this layer present on it at this point:
+Thus we can shard the $$W^Q$$ $$W^K$$  $$W^V$$ parameter matrices column-wise across the `num_heads` dimension, as shown in the diagram below. These will operate on our non-sharded input activations which will be coming a previous layer norm layer, which as mentioned previously, is NOT partitioned in any way, so each device has duplicate activations from this layer present on it at this point:
 
 <img src="/images/megatron-diagrams/QKV_projections.png" alt="QKV projections" style="width: auto;">
 
@@ -241,11 +241,11 @@ Now that we have our $$Q_i$$, $$K_i$$, and $$V_i$$ projections for each head, we
 
 <img src="/images/megatron-diagrams/attention.png" alt="sdpa" style="width: auto;">
 
-With the attention activtions for each head, we can now pass through the final linear projection $$W^O$$, which has been partitioned *row-wise* across devices. As shown in the [attention review](#optional-attention-review) above, the $$W^O$$ projection is normally applied to the **concatenated** attention heads in the typical unsharded computation. So to maintain mathematical fidelity with the unsharded computation, we now need to all-reduce the outputs before proceeding with the dropout layer:
+With the attention activations for each head, we can now pass through the final linear projection $$W^O$$, which has been partitioned *row-wise* across devices. As shown in the [attention review](#optional-attention-review) above, the $$W^O$$ projection is normally applied to the **concatenated** attention heads in the typical unsharded computation. So to maintain mathematical fidelity with the unsharded computation, we now need to all-reduce the outputs before proceeding with the dropout layer:
 
 <img src="/images/megatron-diagrams/attention-linear-output.png" alt="attention-linear-output" style="width: auto;">
 
-One natural question may arise at this point: why are we doing an all-reduce here and not an all-gather here? We parallelized along the `num_heads` dimension, and normally in single-device training we concatenate the attention heads, so wouldn't the analgous thing to do in mult-device training be to all-gataher the head outputs together? 
+One natural question may arise at this point: why are we doing an all-reduce here and not an all-gather here? We parallelized along the `num_heads` dimension, and normally in single-device training we concatenate the attention heads, so wouldn't the analogous thing to do in multi-device training be to all-gather the head outputs together? 
 
 Let's look  carefully at the shapes involved in the computation to figure out why this is.
 
@@ -437,7 +437,7 @@ Wow, that was a lot. Let's recap:
     - 1 all-reduce for the output embedding.
     - 1 all-reduce for the fused cross-entropy loss.
 
-Due to this increased communication overhead, the authors limit the size of the tensor parallel group to the Tesla V100s connected via high-bandwidth, low-latency NVLink (8 GPUs, in this case). They studied scaling with pure tensor parallelism, as well as and data parallel + tensor parallel. They found that despite the increased communication overhead, the tensor parallel technique had 76% scaling efficiency up to 512 GPUs. This means that if they achieved N TFLOPs/sec on 1 GPU, with 100% scaling efficiency with 512 GPUs they'd get $$512\cdot N$$ TFLOPs/sec, and with 76% scaling effiency they got $$512 \cdot 0.76 \cdot N$$ TFLOPs/sec. 
+Due to this increased communication overhead, the authors limit the size of the tensor parallel group to the Tesla V100s connected via high-bandwidth, low-latency NVLink (8 GPUs, in this case). They studied scaling with pure tensor parallelism, as well as and data parallel + tensor parallel. They found that despite the increased communication overhead, the tensor parallel technique had 76% scaling efficiency up to 512 GPUs. This means that if they achieved N TFLOPs/sec on 1 GPU, with 100% scaling efficiency with 512 GPUs they'd get $$512\cdot N$$ TFLOPs/sec, and with 76% scaling efficiency they got $$512 \cdot 0.76 \cdot N$$ TFLOPs/sec. 
 
 This was pretty good at the time, considering the reduction in peak activation memory allowed them to train models with billions of parameters (which was a lot at the time!).
 
