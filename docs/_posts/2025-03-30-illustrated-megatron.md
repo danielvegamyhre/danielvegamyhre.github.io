@@ -443,7 +443,7 @@ This was pretty good at the time, considering the reduction in peak activation m
 
 ### Closing thoughts
 
-That does it for this post. If you enjoyed it, feel free to join the ML Scalability & Performance research paper reading group I organize, which meets in the Eleuther AI Discord.
+That does it for this post. If you enjoyed it, feel free to join the ML Scalability & Performance research paper reading group I organize, which meets in the Eleuther AI Discord. You can find the Excalidraw diagrams in the post on Github [here](https://github.com/danielvegamyhre/ml-scalability-and-performance-reading-group/tree/main/session_8).
 
 # References
 - [Megatron-LM: Training Multi-Billion Parameter Language Models Using Model Parallelism](https://arxiv.org/abs/1909.08053)
