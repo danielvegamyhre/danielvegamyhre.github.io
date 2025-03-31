@@ -256,7 +256,7 @@ So the dimensions of the output $$O_i$$ will be $$ \mathbb{R}^{B \times S \times
 
 So by parallelizing along the `num_heads` dimension, we will have the same shaped output activation on multiple devices, each containing only *partial* results. Therefore, we need to all-reduce to aggregate the results (i.e., the updates to our tokens' positions in embedding space as dictated by the aggregated updates present in the attention head outputs).
 
-...and that's it! To recape:
+...and that's it! To recap:
 
 - In the attention layer forward pass, we do only one all-reduce in the forward pass, at the end of the attention layer. This becomes an identity operator (no-op) in the backward pass.
 - In the attention layer forward pass, our input activations are not sharded, so this becomes an all-reduce in the backward pass, for the same reasons as described in the MLP section.
@@ -289,7 +289,44 @@ This is shown in the diagram below:
 
 <img src="/images/megatron-diagrams/input-embedding.png" alt="sdpa" style="width: auto;">
 
-To make things even more concrete, let's take a look at the PyTorch implementation of [_MaskPartial](https://github.com/pytorch/pytorch/blob/main/torch/distributed/tensor/_ops/_embedding_ops.py#L70).
+To make things even more concrete, let's take a look at the PyTorch implementation of the [_MaskPartial](https://github.com/pytorch/pytorch/blob/main/torch/distributed/tensor/_ops/_embedding_ops.py#L70) Tensor subclass. In particular, let's look at the `_partition_value(...)` method:
+
+```python
+    def _partition_value(
+        self, tensor: torch.Tensor, mesh: DeviceMesh, mesh_dim: int
+    ) -> torch.Tensor:
+        # override parent logic to perform partial mask for embedding
+        num_chunks = mesh.size(mesh_dim)
+        # get local shard size and offset on the embedding_dim
+        assert self.offset_shape is not None, (
+            "offset_shape needs to be set for _MaskPartial"
+        )
+        local_shard_size, local_offset_on_dim = Shard._local_shard_size_on_dim(
+            self.offset_shape[self.offset_dim],
+            num_chunks,
+            mesh.get_local_rank(mesh_dim),
+            return_offset=True,
+        )
+        # Build the input mask and save it for the current partial placement
+        # this is so that the output of embedding op can reuse the same partial
+        # placement saved mask to perform mask + reduction
+        mask = (tensor < local_offset_on_dim) | (
+            tensor >= local_offset_on_dim + local_shard_size
+        )
+        # mask the input tensor
+        masked_tensor = tensor.clone() - local_offset_on_dim
+        masked_tensor[mask] = 0
+        # materialize the mask buffer to be used for reduction
+        self.mask_buffer.materialize_mask(mask)
+        return masked_tensor
+```
+
+As you can see, a `mask` is constructed based on `local_offset_on_dim + local_shard_size` (basically, the range of indexes that exist on this shard). Any values outside this range are masked and set to `0`. The masked ranges on each device are exclusive sets, so every token will have a populated embedding on 1 device and be set to 0 on all others. When we all-reduce (sum) the resulting token embeddings across devices.
+
+So to recap:
+- The input embedding is *huge* and takes a lot of GPU/TPU HBM capacity to store it, so it's beneficial to shard it across devices.
+- The input embedding is sharded across the vocabulary dimension.
+- This requires one all-reduce in the forward pass, which becomes its conjugate (no-op/identity) in the backward pass.
 
 ## Output embeddings and fused cross-entropy loss
 
