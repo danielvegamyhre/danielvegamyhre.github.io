@@ -34,7 +34,7 @@ The paper [Megatron-LM: Training Multi-Billion Parameter Language Models Using M
 
 2) The activations remain sharded for as long as possible before synchronizing (which must be done to ensure the mathematical integrity of the training process), to minimize this communication overhead between devices, which can slow down training and become a bottleneck.
 
-We'll now dive into the
+For readers interested in a deep-dive - let's get started with parallelizing the MLP blocks.
 
 ## MLP blocks
 
