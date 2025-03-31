@@ -12,7 +12,7 @@ categories: ml performance
 
 In this post, I attempt to provide a detailed walkthrough of Megatron-style tensor parallelism, with diagrams to help make the concepts and mathematics more digestible. The target audience for this post is readers who are already familiar with ML and the transformer architecture, who wish to deepen their understanding of tensor parallelism.
 
-The goal of this post is to provide both an **overview** of the techniques proposed in the paper, as well as a **derivation** of how we arrive at each particular technique as the best solution, from a set of possible options. It will not cover other topics covered in the paper such as experiments and results, etc.
+The goal of this post is to provide both an **overview** of the techniques proposed in the paper, as well as a **derivation** of how we arrive at each particular technique as the best solution, from a set of possible options. We'll also some examine some of the implementation details of tensor parallelism in PyTorch to make our knowledge more concrete.
 
 This post will be divided into 4 sections, with some broken down into more digestable sub-sections:
 1. [MLP blocks](#mlp-blocks)
