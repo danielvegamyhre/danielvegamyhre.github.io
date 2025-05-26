@@ -264,7 +264,7 @@ Now that we have our $$Q_i$$, $$K_i$$, and $$V_i$$ projections for each head, we
 
 With the attention activations for each head, we can now pass through the final linear projection $$W^O$$, which has been partitioned *row-wise* across devices. As shown in the [attention review](#optional-attention-review) above, the $$W^O$$ projection is normally applied to the **concatenated** attention heads in the typical unsharded computation. So to maintain mathematical fidelity with the unsharded computation, we now need to all-reduce the outputs before proceeding with the dropout layer:
 
-<img src="/images/megatron-diagrams/attention-linear-output.png" alt="attention-linear-output" style="width: auto;">
+<img src="/images/megatron-diagrams/attention-all-reduce.png" alt="attention-linear-output" style="width: auto;">
 
 One natural question may arise at this point: why are we doing an all-reduce here and not an all-gather here? We parallelized along the `num_heads` dimension, and normally in single-device training we concatenate the attention heads, so wouldn't the analogous thing to do in multi-device training be to all-gather the head outputs together? 
 
