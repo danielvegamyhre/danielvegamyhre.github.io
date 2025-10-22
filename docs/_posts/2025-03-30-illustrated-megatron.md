@@ -407,7 +407,7 @@ $$
 Note that our "true probability" (label) will be 1 for true token, and 0 for all others. Therefore, the CE loss simplifies to:
 
 $$
-\text{CE} = -\sum_{i=1}^{n} 1 \cdot log(q(x_i))
+\text{CE} = - (1 * log(q(x_i))) = -log(q(x_i))
 $$
 
 Where:
