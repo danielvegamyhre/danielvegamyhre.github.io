@@ -31,6 +31,9 @@ plugins:
   - jekyll-feed
   - jemoji
 
+collections:
+  talks:
+    output: true
 
 # Exclude from processing.
 # The following items will not be processed, by default.
@@ -51,3 +54,8 @@ plugins:
 #   - vendor/cache/
 #   - vendor/gems/
 #   - vendor/ruby/
+
+header_pages:
+  - index.markdown
+  - talks.markdown
+  - about.markdown

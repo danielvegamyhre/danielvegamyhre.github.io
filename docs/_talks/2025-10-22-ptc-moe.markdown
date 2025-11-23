@@ -1,0 +1,14 @@
+---
+layout: post
+title:  "PyTorch Conference 2025: MXFP8 Training for MoEs with TorchAO"
+date:   2025-10-22 12:45:51 -0700
+categories: ml performance
+---
+
+At PyTorch Conference 2025 I co-presented a talk on [*PyTorch APIs for High Performance MoE Training and Inference*](https://pytorchconference.sched.com/event/27QE0/pytorch-apis-for-high-performance-moe-training-and-inference-daniel-vega-myhre-ke-wen-natalia-gimelshein-meta). My part of the talk, titled **MXFP8 Training for MoEs with TorchAO**, can be viewed on YouTube below. I plan to follow up with a blog post diving into more detail and doing a code tour for some of the more interesting Triton and CUDA kernels as well! In particular, writing the e8m0 scale factors to the [blocked layout](https://docs.nvidia.com/cuda/cublas/index.html#d-block-scaling-factors-layout) (a requirement for `tcgen05.mma.*` PTX instructions on Blackwell) is a bit unintuitive and could benefit from a more detailed walkthrough. 
+
+In the meantime, enjoy the talk! (Note you may need to disable ad blocker for the youtube player to render properly. Alternatively, you can watch directly on YouTube [here](https://youtu.be/h6LjH6Jkaf0?si=f7CRZfKa2UMj3gWO)).
+
+The prototype for MXFP8 MoE training, with documentation, examples, and reproducible benchmarks, can be found [here](https://github.com/pytorch/ao/tree/main/torchao/prototype/moe_training). Feel free to reach out with any questions!
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/h6LjH6Jkaf0?si=BmLN2D2jq0lbf02q&amp;start=1022" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
