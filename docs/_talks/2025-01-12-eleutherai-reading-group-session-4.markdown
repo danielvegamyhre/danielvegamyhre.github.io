@@ -15,6 +15,6 @@ Papers:
 2. [Blockwise Parallel Transformer for Large Context Models](https://arxiv.org/abs/2305.19370)
 3. [Ring Attention with Blockwise Transformers for Near-Infinite Context](https://arxiv.org/abs/2310.01889)
 
-Recording:
+Note: you may have to disable ad blocker for the YouTube player to render correctly. Alternatively, you can watch the recording directly on YouTube [here](https://www.youtube.com/watch?v=fC9L8J7dVFI).
 
-[![ML Scalability & Performance Reading Group Session 4: Ring Attention](https://img.youtube.com/vi/fC9L8J7dVFI/maxresdefault.jpg)](https://www.youtube.com/watch?v=fC9L8J7dVFI)
+<iframe width="560" height="315" src="https://www.youtube.com/embed/fC9L8J7dVFI?si=Ay7q1fhkpXJ7HaXx" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>

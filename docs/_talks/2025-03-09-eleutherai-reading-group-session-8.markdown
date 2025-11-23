@@ -13,6 +13,7 @@ My annotated versions of these papers can be found be found on my Github [here](
 Papers:
 1. [Megatron-LM: Training Multi-Billion Parameter Language Models Using Model Parallelism](https://arxiv.org/abs/1909.08053)
 
-Recording:
+Note: you may have to disable ad blocker for the YouTube player to render correctly. Alternatively, you can watch the recording directly on YouTube [here](https://www.youtube.com/watch?v=ImKyR1tsPPE).
 
-[![ML Scalability & Performance Reading Group Session 8: Megatron-LM](https://img.youtube.com/vi/ImKyR1tsPPE/maxresdefault.jpg)](https://youtu.be/ImKyR1tsPPE)
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/ImKyR1tsPPE?si=TlRy2BplaeK6ECuf" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
