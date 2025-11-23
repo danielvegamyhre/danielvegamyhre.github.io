@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  "Reducing Activation Recomputation in Large Transformer Models"
+title:  "EleutherAI ML Perf Reading Group: Reducing Activation Recomputation in Large Transformer Models"
 date:   2025-03-23 12:45:51 -0700
 categories: ml performance
 ---

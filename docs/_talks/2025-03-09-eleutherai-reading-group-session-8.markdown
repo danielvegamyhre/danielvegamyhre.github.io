@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  "Megatron-LM"
+title:  "EleutherAI ML Perf Reading Group: Megatron-LM"
 date:   2025-03-09 12:45:51 -0700
 categories: ml performance
 ---

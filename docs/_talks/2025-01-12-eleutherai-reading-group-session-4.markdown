@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  "Ring Attention with Blockwise Transformers for Near-Infinite Context"
+title:  "EleutherAI ML Perf Reading Group: Ring Attention"
 date:   2025-01-12 12:45:51 -0700
 categories: ml performance
 ---

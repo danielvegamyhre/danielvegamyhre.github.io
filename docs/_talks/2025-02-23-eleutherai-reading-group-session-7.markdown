@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  "DeepSeek V3"
+title:  "EleutherAI ML Perf Reading Group: DeepSeek V3"
 date:   2025-02-23 12:45:51 -0700
 categories: ml performance
 ---

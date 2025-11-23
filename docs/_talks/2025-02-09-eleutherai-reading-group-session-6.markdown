@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  "Zero Bubble Pipeline Parallelism"
+title:  "EleutherAI ML Perf Reading Group: Zero Bubble Pipeline Parallelism"
 date:   2025-02-09 12:45:51 -0700
 categories: ml performance
 ---
