@@ -1,0 +1,23 @@
+ninja: no work to do.
+CUDA Device: NVIDIA B200
+PyTorch version: 2.11.0+cu130
+
+Matrix size: M=2048, K=2048, N=2048
+  Custom kernel:        17.536 us (979.69 tflops)
+  PyTorch _scaled_mm:   17.248 us (996.05 tflops)
+  Speedup: 0.98x
+
+Matrix size: M=4096, K=4096, N=4096
+  Custom kernel:        62.288 us (2206.51 tflops)
+  PyTorch _scaled_mm:   54.144 us (2538.40 tflops)
+  Speedup: 0.87x
+
+Matrix size: M=8192, K=8192, N=8192
+  Custom kernel:       435.264 us (2526.08 tflops)
+  PyTorch _scaled_mm:  408.416 us (2692.14 tflops)
+  Speedup: 0.94x
+
+Matrix size: M=16384, K=16384, N=16384
+  Custom kernel:       3593.408 us (2447.84 tflops)
+  PyTorch _scaled_mm:  3436.320 us (2559.74 tflops)
+  Speedup: 0.96x

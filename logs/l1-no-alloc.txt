@@ -1,0 +1,71 @@
+[1/2] /usr/local/cuda-13.0/bin/nvcc -MD -MF tcgen05_mxfp8_2cta_256n_overlap128.cuda.o.d -DTORCH_EXTENSION_NAME=tcgen05_mxfp8_2cta_256n_overlap128 -DTORCH_API_INCLUDE_EXTENSION_H -isystem /home/dev/.conda/envs/torch/lib/python3.13/site-packages/torch/include -isystem /home/dev/.conda/envs/torch/lib/python3.13/site-packages/torch/include/torch/csrc/api/include -isystem /usr/local/cuda-13.0/include -isystem /home/dev/.conda/envs/torch/include/python3.13 -D__CUDA_NO_HALF_OPERATORS__ -D__CUDA_NO_HALF_CONVERSIONS__ -D__CUDA_NO_BFLOAT16_CONVERSIONS__ -D__CUDA_NO_HALF2_OPERATORS__ --expt-relaxed-constexpr --compiler-options '-fPIC' -O3 --use_fast_math -gencode=arch=compute_100a,code=sm_100a --ptxas-options=-v -std=c++17 -c /home/dev/gemm/blackwell/5_tcgen05_mxfp8_2cta_256n_overlap128/tcgen05_mxfp8_2cta_256n_overlap128.cu -o tcgen05_mxfp8_2cta_256n_overlap128.cuda.o 
+/home/dev/gemm/blackwell/5_tcgen05_mxfp8_2cta_256n_overlap128/tcgen05_mxfp8_2cta_256n_overlap128.cu(771): warning #177-D: variable "NUM_MMA_MBARS" was declared but never referenced
+      constexpr int NUM_MMA_MBARS = TMEM_BUFFERS;
+                    ^
+          detected during instantiation of "void ws_gemm_2cta_mma<USE_HILBERT,QUEUE_SIZE,BM,BN,BK,MMA_M,MMA_N,MMA_K>(CUtensorMap, CUtensorMap, CUtensorMap, CUtensorMap, float *, int, int, int) [with USE_HILBERT=true, QUEUE_SIZE=3, BM=128, BN=256, BK=256, MMA_M=128, MMA_N=256, MMA_K=32]" 
+
+Remark: The warnings can be suppressed with "-diag-suppress <warning-number>"
+
+/home/dev/gemm/blackwell/5_tcgen05_mxfp8_2cta_256n_overlap128/tcgen05_mxfp8_2cta_256n_overlap128.cu(777): warning #177-D: variable "MBAR_SIZE" was declared but never referenced
+      constexpr int MBAR_SIZE = sizeof(uint64_t);
+                    ^
+          detected during instantiation of "void ws_gemm_2cta_mma<USE_HILBERT,QUEUE_SIZE,BM,BN,BK,MMA_M,MMA_N,MMA_K>(CUtensorMap, CUtensorMap, CUtensorMap, CUtensorMap, float *, int, int, int) [with USE_HILBERT=true, QUEUE_SIZE=3, BM=128, BN=256, BK=256, MMA_M=128, MMA_N=256, MMA_K=32]" 
+
+/home/dev/gemm/blackwell/5_tcgen05_mxfp8_2cta_256n_overlap128/tcgen05_mxfp8_2cta_256n_overlap128.cu(934): warning #177-D: variable "NUM_EPILOGUE_TMEM_BUFFERS" was declared but never referenced
+      constexpr int NUM_EPILOGUE_TMEM_BUFFERS = 3;
+                    ^
+          detected during instantiation of "void ws_gemm_2cta_mma<USE_HILBERT,QUEUE_SIZE,BM,BN,BK,MMA_M,MMA_N,MMA_K>(CUtensorMap, CUtensorMap, CUtensorMap, CUtensorMap, float *, int, int, int) [with USE_HILBERT=true, QUEUE_SIZE=3, BM=128, BN=256, BK=256, MMA_M=128, MMA_N=256, MMA_K=32]" 
+
+ptxas info    : 0 bytes gmem
+ptxas info    : Compiling entry function '_Z16ws_gemm_2cta_mmaILb0ELi3ELi128ELi256ELi256ELi128ELi256ELi32EEv14CUtensorMap_stS0_S0_S0_Pfiii' for 'sm_100a'
+ptxas info    : Function properties for _Z16ws_gemm_2cta_mmaILb0ELi3ELi128ELi256ELi256ELi128ELi256ELi32EEv14CUtensorMap_stS0_S0_S0_Pfiii
+    0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+ptxas info    : Used 152 registers, used 0 barriers
+ptxas info    : Compile time = 51.555 ms
+ptxas info    : Function properties for _Z13consumer_warpILi3ELi128ELi256ELi256ELi128ELi256ELi32ELi8ELi16ELi128EEviiiijjjjjj
+    0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+ptxas info    : Function properties for _Z13producer_warpILb0ELi3ELi128ELi256ELi256EEvPK14CUtensorMap_stS2_S2_S2_iiiiijiijjj
+    0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+ptxas info    : Function properties for _Z18epilogue_warpgroupILb0ELi128ELi256ELi128EEvPfiiiiijiijjj
+    0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+ptxas info    : Compiling entry function '_Z16ws_gemm_2cta_mmaILb1ELi3ELi128ELi256ELi256ELi128ELi256ELi32EEv14CUtensorMap_stS0_S0_S0_Pfiii' for 'sm_100a'
+ptxas info    : Function properties for _Z16ws_gemm_2cta_mmaILb1ELi3ELi128ELi256ELi256ELi128ELi256ELi32EEv14CUtensorMap_stS0_S0_S0_Pfiii
+    0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+ptxas info    : Used 154 registers, used 0 barriers
+ptxas info    : Compile time = 53.871 ms
+ptxas info    : Function properties for _Z13consumer_warpILi3ELi128ELi256ELi256ELi128ELi256ELi32ELi8ELi16ELi128EEviiiijjjjjj
+    0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+ptxas info    : Function properties for _Z13producer_warpILb1ELi3ELi128ELi256ELi256EEvPK14CUtensorMap_stS2_S2_S2_iiiiijiijjj
+    0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+ptxas info    : Function properties for _Z18epilogue_warpgroupILb1ELi128ELi256ELi128EEvPfiiiiijiijjj
+    0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+/home/dev/gemm/blackwell/5_tcgen05_mxfp8_2cta_256n_overlap128/tcgen05_mxfp8_2cta_256n_overlap128.cu: In function ‘void* get_driver_ptr()’:
+/home/dev/gemm/blackwell/5_tcgen05_mxfp8_2cta_256n_overlap128/tcgen05_mxfp8_2cta_256n_overlap128.cu:33:40: warning: ‘cudaError_t cudaGetDriverEntryPoint(const char*, void**, long long unsigned int, cudaDriverEntryPointQueryResult*)’ is deprecated [-Wdeprecated-declarations]
+   33 |         CUDA_CHECK(cudaGetDriverEntryPoint("cuTensorMapEncodeTiled", &driver_ptr,
+      |                 ~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~                         
+/usr/local/cuda-13.0/include/cuda_runtime_api.h:13101:46: note: declared here
+13101 | extern __CUDA_DEPRECATED __host__ cudaError_t CUDARTAPI cudaGetDriverEntryPoint(const char *symbol, void **funcPtr, unsigned long long flags, enum cudaDriverEntryPointQueryResult *driverStatus = NULL);
+      |                                              ^~~~~~~~~~~~~~~~~~~~~~~
+[2/2] c++ tcgen05_mxfp8_2cta_256n_overlap128.o tcgen05_mxfp8_2cta_256n_overlap128.cuda.o -shared -L/home/dev/.conda/envs/torch/lib/python3.13/site-packages/torch/lib -lc10 -lc10_cuda -ltorch_cpu -ltorch_cuda -ltorch -ltorch_python -L/usr/local/cuda-13.0/lib64 -lcudart -o tcgen05_mxfp8_2cta_256n_overlap128.so
+CUDA Device: NVIDIA B200
+PyTorch version: 2.11.0+cu130
+
+Matrix size: M=2048, K=2048, N=2048
+  Custom kernel:        19.392 us (885.93 tflops)
+  PyTorch _scaled_mm:   17.248 us (996.05 tflops)
+  Speedup: 0.89x
+
+Matrix size: M=4096, K=4096, N=4096
+  Custom kernel:        62.432 us (2201.42 tflops)
+  PyTorch _scaled_mm:   54.144 us (2538.40 tflops)
+  Speedup: 0.87x
+
+Matrix size: M=8192, K=8192, N=8192
+  Custom kernel:       433.312 us (2537.46 tflops)
+  PyTorch _scaled_mm:  392.096 us (2804.19 tflops)
+  Speedup: 0.90x
+
+Matrix size: M=16384, K=16384, N=16384
+  Custom kernel:       3615.632 us (2432.80 tflops)
+  PyTorch _scaled_mm:  3439.488 us (2557.38 tflops)
+  Speedup: 0.95x

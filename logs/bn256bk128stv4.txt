@@ -1,0 +1,58 @@
+[1/2] /usr/local/cuda-13.0/bin/nvcc -MD -MF tcgen05_mxfp8_2cta_256n_warp_specialized.cuda.o.d -DTORCH_EXTENSION_NAME=tcgen05_mxfp8_2cta_256n_warp_specialized -DTORCH_API_INCLUDE_EXTENSION_H -isystem /home/dev/.conda/envs/torch/lib/python3.13/site-packages/torch/include -isystem /home/dev/.conda/envs/torch/lib/python3.13/site-packages/torch/include/torch/csrc/api/include -isystem /usr/local/cuda-13.0/include -isystem /home/dev/.conda/envs/torch/include/python3.13 -D__CUDA_NO_HALF_OPERATORS__ -D__CUDA_NO_HALF_CONVERSIONS__ -D__CUDA_NO_BFLOAT16_CONVERSIONS__ -D__CUDA_NO_HALF2_OPERATORS__ --expt-relaxed-constexpr --compiler-options '-fPIC' -O3 --use_fast_math -gencode=arch=compute_100a,code=sm_100a --ptxas-options=-v -std=c++17 -c /home/dev/gemm/blackwell/5_tcgen05_mxfp8_2cta_256n_warp_specialized/tcgen05_mxfp8_2cta_256n_warp_specialized.cu -o tcgen05_mxfp8_2cta_256n_warp_specialized.cuda.o 
+/home/dev/gemm/blackwell/5_tcgen05_mxfp8_2cta_256n_warp_specialized/tcgen05_mxfp8_2cta_256n_warp_specialized.cu(900): warning #177-D: variable "TMEM_BUFFERS" was declared but never referenced
+      constexpr int TMEM_BUFFERS = 2;
+                    ^
+
+Remark: The warnings can be suppressed with "-diag-suppress <warning-number>"
+
+/home/dev/gemm/blackwell/5_tcgen05_mxfp8_2cta_256n_warp_specialized/tcgen05_mxfp8_2cta_256n_warp_specialized.cu(902): warning #177-D: variable "SF_BYTES" was declared but never referenced
+      constexpr int SF_BYTES = 512;
+                    ^
+
+/home/dev/gemm/blackwell/5_tcgen05_mxfp8_2cta_256n_warp_specialized/tcgen05_mxfp8_2cta_256n_warp_specialized.cu(813): warning #177-D: variable "epilogue_tmem_buf" was declared but never referenced
+      int epilogue_tmem_buf = 0;
+          ^
+          detected during instantiation of "void ws_gemm_2cta_mma<QUEUE_SIZE,BM,BN,BK,MMA_M,MMA_N,MMA_K>(CUtensorMap, CUtensorMap, CUtensorMap, CUtensorMap, float *, int, int, int) [with QUEUE_SIZE=6, BM=128, BN=256, BK=128, MMA_M=128, MMA_N=256, MMA_K=32]" 
+
+ptxas info    : 0 bytes gmem
+ptxas info    : Compiling entry function '_Z16ws_gemm_2cta_mmaILi6ELi128ELi256ELi128ELi128ELi256ELi32EEv14CUtensorMap_stS0_S0_S0_Pfiii' for 'sm_100a'
+ptxas info    : Function properties for _Z16ws_gemm_2cta_mmaILi6ELi128ELi256ELi128ELi128ELi256ELi32EEv14CUtensorMap_stS0_S0_S0_Pfiii
+    80 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+ptxas info    : Used 196 registers, used 0 barriers, 80 bytes cumulative stack size
+ptxas info    : Compile time = 45.383 ms
+ptxas info    : Function properties for _Z13consumer_warpILi6ELi128ELi256ELi128ELi128ELi256ELi32ELi4ELi8ELi128EEviiiijjjjjj
+    0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+ptxas info    : Function properties for _Z13producer_warpILi6ELi128ELi256ELi128EEvPK14CUtensorMap_stS2_S2_S2_iiiiijiijjj
+    0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+ptxas info    : Function properties for _Z18epilogue_warpgroupILi128ELi256ELi128EEvPfiiiiijiijjjj
+    0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+/home/dev/gemm/blackwell/5_tcgen05_mxfp8_2cta_256n_warp_specialized/tcgen05_mxfp8_2cta_256n_warp_specialized.cu: In function ‘void* get_driver_ptr()’:
+/home/dev/gemm/blackwell/5_tcgen05_mxfp8_2cta_256n_warp_specialized/tcgen05_mxfp8_2cta_256n_warp_specialized.cu:33:40: warning: ‘cudaError_t cudaGetDriverEntryPoint(const char*, void**, long long unsigned int, cudaDriverEntryPointQueryResult*)’ is deprecated [-Wdeprecated-declarations]
+   33 |         CUDA_CHECK(cudaGetDriverEntryPoint("cuTensorMapEncodeTiled", &driver_ptr,
+      |                 ~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~                         
+/usr/local/cuda-13.0/include/cuda_runtime_api.h:13101:46: note: declared here
+13101 | extern __CUDA_DEPRECATED __host__ cudaError_t CUDARTAPI cudaGetDriverEntryPoint(const char *symbol, void **funcPtr, unsigned long long flags, enum cudaDriverEntryPointQueryResult *driverStatus = NULL);
+      |                                              ^~~~~~~~~~~~~~~~~~~~~~~
+[2/2] c++ tcgen05_mxfp8_2cta_256n_warp_specialized.o tcgen05_mxfp8_2cta_256n_warp_specialized.cuda.o -shared -L/home/dev/.conda/envs/torch/lib/python3.13/site-packages/torch/lib -lc10 -lc10_cuda -ltorch_cpu -ltorch_cuda -ltorch -ltorch_python -L/usr/local/cuda-13.0/lib64 -lcudart -o tcgen05_mxfp8_2cta_256n_warp_specialized.so
+CUDA Device: NVIDIA B200
+PyTorch version: 2.11.0+cu130
+
+Matrix size: M=2048, K=2048, N=2048
+  Custom kernel:        21.536 us (797.73 tflops)
+  PyTorch _scaled_mm:   17.248 us (996.05 tflops)
+  Speedup: 0.80x
+
+Matrix size: M=4096, K=4096, N=4096
+  Custom kernel:        95.200 us (1443.69 tflops)
+  PyTorch _scaled_mm:   54.112 us (2539.90 tflops)
+  Speedup: 0.57x
+
+Matrix size: M=8192, K=8192, N=8192
+  Custom kernel:       578.464 us (1900.74 tflops)
+  PyTorch _scaled_mm:  385.920 us (2849.07 tflops)
+  Speedup: 0.67x
+
+Matrix size: M=16384, K=16384, N=16384
+  Custom kernel:       4549.472 us (1933.43 tflops)
+  PyTorch _scaled_mm:  3312.480 us (2655.44 tflops)
+  Speedup: 0.73x
